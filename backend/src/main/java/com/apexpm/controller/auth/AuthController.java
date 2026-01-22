@@ -11,6 +11,7 @@ import com.apexpm.security.jwt.JwtUtil;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -43,12 +44,13 @@ public class AuthController {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = jwtUtil.generateToken(authentication);
 
-            AuthResponseDTO response = new AuthResponseDTO();
-            response.setToken(jwt);
-            response.setUsername(request.getUsername());
-            response.setMessage("Login effettuato");
-
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(
+                    AuthResponseDTO.builder()
+                            .token(jwt)
+                            .username(request.getUsername())
+                            .message("Login effettuato con successo")
+                            .build()
+            );
 
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(401).body(Map.of("error", "Credenziali non valide"));
@@ -79,15 +81,18 @@ public class AuthController {
         );
         String jwt = jwtUtil.generateToken(authentication);
 
-        AuthResponseDTO response = new AuthResponseDTO();
-        response.setToken(jwt);
-        response.setUsername(request.getUsername());
-        response.setMessage("Registrazione completata");
+        return ResponseEntity.ok(
+                AuthResponseDTO.builder()
+                        .token(jwt)
+                        .username(request.getUsername())
+                        .message("Registrazione completata")
+                        .build()
+        );
 
-        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserInfoDTO> getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
@@ -109,6 +114,8 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
         SecurityContextHolder.clearContext();
-        return ResponseEntity.ok(Map.of("message", "Logout effettuato. Token invalidato lato client."));
+        return ResponseEntity.ok(Map.of(
+                "message", "Logout effettuato con successo. Rimuovi il token dal client."
+        ));
     }
 }
