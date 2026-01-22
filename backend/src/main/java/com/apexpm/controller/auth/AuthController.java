@@ -105,4 +105,10 @@ public class AuthController {
 
         return ResponseEntity.ok(dto);
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        SecurityContextHolder.clearContext();
+        return ResponseEntity.ok(Map.of("message", "Logout effettuato. Token invalidato lato client."));
+    }
 }
